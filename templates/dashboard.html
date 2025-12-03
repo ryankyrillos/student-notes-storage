@@ -24,7 +24,7 @@
         <hr>
         <ul class="file-list">
             {% for file in files %}
-            <li><a href="https://{{ bucket_name }}.s3.amazonaws.com/{{ file.s3_key }}" target="_blank">{{ file.filename
+            <li><a href="/download/{{ file.id }}" target="_blank">{{ file.filename
                     }}</a> (uploaded {{ file.uploaded_at }})</li>
             {% else %}
             <li>No notes uploaded yet.</li>

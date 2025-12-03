@@ -113,6 +113,25 @@ def upload():
     flash('File uploaded successfully')
     return redirect(url_for('dashboard'))
 
+@app.route('/download/<int:file_id>')
+def download(file_id):
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+    # Get file record and verify ownership
+    with conn.cursor() as cur:
+        cur.execute("SELECT * FROM notes WHERE id=%s AND user_id=%s", (file_id, session['user_id']))
+        file_record = cur.fetchone()
+    if not file_record:
+        flash('File not found')
+        return redirect(url_for('dashboard'))
+    # Generate presigned URL (valid for 1 hour)
+    presigned_url = s3.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': BUCKET_NAME, 'Key': file_record['s3_key']},
+        ExpiresIn=3600
+    )
+    return redirect(presigned_url)
+
 if __name__ == '__main__':
     # In production use gunicorn; this block is for local testing
     app.run(host='0.0.0.0', port=8080, debug=False)
