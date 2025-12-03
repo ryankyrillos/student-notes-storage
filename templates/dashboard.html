@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Student Notes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Your Notes</h1>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flash-messages">
+            {% for msg in messages %}<li>{{ msg }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <button type="submit">Upload</button>
+        </form>
+        <hr>
+        <ul class="file-list">
+            {% for file in files %}
+            <li><a href="https://{{ bucket_name }}.s3.amazonaws.com/{{ file.s3_key }}" target="_blank">{{ file.filename
+                    }}</a> (uploaded {{ file.uploaded_at }})</li>
+            {% else %}
+            <li>No notes uploaded yet.</li>
+            {% endfor %}
+        </ul>
+        <p><a href="/logout">Logout</a></p>
+    </div>
+</body>
+
+</html>
