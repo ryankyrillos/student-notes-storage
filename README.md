@@ -4,9 +4,10 @@ A secure, scalable cloud-based application for students to upload, store, and ac
 
 ## Features
 - User registration and authentication
-- Secure file upload to AWS S3
-- Notes management dashboard
-- RDS MySQL database for user data
+- Secure file upload to AWS S3 with presigned downloads
+- Dashboard controls to delete uploaded files
+- Browser-based text notes editor saved into MySQL
+- RDS MySQL database for user and note data
 - Auto-scaling EC2 infrastructure
 - CloudWatch monitoring
 

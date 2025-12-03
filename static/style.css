@@ -17,13 +17,29 @@ body {
     margin-top: 3rem;
     box-shadow: 0 8px 32px rgba(0,0,0,0.12);
     width: 90%;
-    max-width: 500px;
+    max-width: 960px;
 }
 
 h1 {
     color: #2c3e50;
-    text-align: center;
+    margin: 0;
+}
+
+.tagline {
+    margin: 0.3rem 0 0;
+    color: #56657a;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1.5rem;
+}
+
+.logout-link {
+    color: #e74c3c;
+    font-weight: 600;
 }
 
 form {
@@ -37,11 +53,16 @@ label {
     color: #34495e;
 }
 
-input[type="email"], input[type="password"], input[type="file"] {
+input[type="email"], input[type="password"], input[type="file"], input[type="text"], textarea {
     padding: 0.6rem;
     border: 1px solid #bdc3c7;
     border-radius: 6px;
     font-size: 1rem;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 120px;
 }
 
 button {
@@ -59,6 +80,15 @@ button:hover {
     background: #2980b9;
 }
 
+.secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.secondary:hover {
+    background: #d0d7de;
+}
+
 .flash-messages {
     list-style: none;
     padding: 0;
@@ -66,14 +96,57 @@ button:hover {
     color: #e74c3c;
 }
 
-.file-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-.file-list li {
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(15,32,56,0.08);
+}
+
+.file-list,
+.note-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0;
+}
+
+.file-list li,
+.note-list li {
     margin-bottom: 0.5rem;
+}
+
+.file-row,
+.note-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.note-card {
+    flex-direction: column;
+    border: 1px solid #edf1f7;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.note-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    color: #6c7a89;
+}
+
+.inline-form {
+    margin: 0;
+    display: inline-flex;
 }
 
 a {

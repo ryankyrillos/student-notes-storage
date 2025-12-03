@@ -9,7 +9,14 @@
 
 <body>
     <div class="container">
-        <h1>Your Notes</h1>
+        <div class="header">
+            <div>
+                <h1>Student Notes Workspace</h1>
+                <p class="tagline">Upload study files, write quick notes, and manage everything in one dashboard.</p>
+            </div>
+            <a href="/logout" class="logout-link">Logout</a>
+        </div>
+
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         <ul class="flash-messages">
@@ -17,20 +24,66 @@
         </ul>
         {% endif %}
         {% endwith %}
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" required>
-            <button type="submit">Upload</button>
-        </form>
-        <hr>
-        <ul class="file-list">
-            {% for file in files %}
-            <li><a href="/download/{{ file.id }}" target="_blank">{{ file.filename
-                    }}</a> (uploaded {{ file.uploaded_at }})</li>
-            {% else %}
-            <li>No notes uploaded yet.</li>
-            {% endfor %}
-        </ul>
-        <p><a href="/logout">Logout</a></p>
+
+        <div class="dashboard-grid">
+            <section class="card">
+                <h2>Upload a File</h2>
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" required>
+                    <button type="submit">Upload</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Write a Quick Note</h2>
+                <form action="/notes" method="post">
+                    <input type="text" name="note_title" placeholder="Title" required>
+                    <textarea name="note_content" rows="6" placeholder="Type your note..." required></textarea>
+                    <button type="submit">Save Note</button>
+                </form>
+            </section>
+        </div>
+
+        <section class="card">
+            <h2>Your Uploaded Files</h2>
+            <ul class="file-list">
+                {% for file in files %}
+                <li>
+                    <div class="file-row">
+                        <div>
+                            <a href="/download/{{ file.id }}" target="_blank">{{ file.filename }}</a>
+                            <small>Uploaded {{ file.uploaded_at }}</small>
+                        </div>
+                        <form action="/files/{{ file.id }}/delete" method="post" class="inline-form">
+                            <button type="submit" class="secondary">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% else %}
+                <li>No files uploaded yet.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="card">
+            <h2>Saved Notes</h2>
+            <ul class="note-list">
+                {% for note in notes %}
+                <li class="note-card">
+                    <div class="note-header">
+                        <strong>{{ note.title }}</strong>
+                        <small>Updated {{ note.updated_at }}</small>
+                    </div>
+                    <p>{{ note.content }}</p>
+                    <form action="/notes/{{ note.id }}/delete" method="post" class="inline-form">
+                        <button type="submit" class="secondary">Delete</button>
+                    </form>
+                </li>
+                {% else %}
+                <li>No notes saved yet.</li>
+                {% endfor %}
+            </ul>
+        </section>
     </div>
 </body>
 
