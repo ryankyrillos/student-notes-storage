@@ -89,6 +89,11 @@ button:hover {
     background: #d0d7de;
 }
 
+button[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .flash-messages {
     list-style: none;
     padding: 0;

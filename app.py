@@ -6,11 +6,13 @@ Features:
 - Dashboard showing uploaded notes (metadata from RDS)
 """
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, stream_with_context
 import boto3
 import pymysql
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
+import mimetypes
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'super-secret-key')
@@ -79,6 +81,26 @@ def delete_text_note(note_id, user_id):
     with conn.cursor() as cur:
         cur.execute("DELETE FROM text_notes WHERE id=%s AND user_id=%s", (note_id, user_id))
     conn.commit()
+
+def stream_s3_file(bucket, key, download_name):
+    """Stream S3 object through Flask so browsers keep the original filename."""
+    s3_object = s3.get_object(Bucket=bucket, Key=key)
+    body = s3_object['Body']
+    guessed_type, _ = mimetypes.guess_type(download_name)
+    content_type = s3_object.get('ContentType') or guessed_type or 'application/octet-stream'
+
+    def generate():
+        chunk = body.read(8192)
+        while chunk:
+            yield chunk
+            chunk = body.read(8192)
+
+    response = Response(stream_with_context(generate()), mimetype=content_type)
+    response.headers['Content-Disposition'] = f'attachment; filename="{download_name}"'
+    content_length = s3_object.get('ContentLength')
+    if content_length:
+        response.headers['Content-Length'] = str(content_length)
+    return response
 
 # ---------- Routes ----------
 @app.route('/')
@@ -151,17 +173,13 @@ def download(file_id):
     if not file_record:
         flash('File not found')
         return redirect(url_for('dashboard'))
-    # Generate presigned URL (valid for 1 hour)
-    presigned_url = s3.generate_presigned_url(
-        'get_object',
-        Params={
-            'Bucket': BUCKET_NAME,
-            'Key': file_record['s3_key'],
-            'ResponseContentDisposition': f"attachment; filename=\"{file_record['filename']}\""
-        },
-        ExpiresIn=3600
-    )
-    return redirect(presigned_url)
+    try:
+        return stream_s3_file(BUCKET_NAME, file_record['s3_key'], file_record['filename'])
+    except ClientError:
+        flash('File is missing from storage')
+    except Exception:
+        flash('Unable to download file right now')
+    return redirect(url_for('dashboard'))
 
 @app.route('/files/<int:file_id>/delete', methods=['POST'])
 def delete_file(file_id):
