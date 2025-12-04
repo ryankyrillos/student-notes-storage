@@ -25,10 +25,12 @@
         {% endif %}
         {% endwith %}
 
+        <div class="inline-status" data-inline-status aria-live="polite"></div>
+
         <div class="dashboard-grid">
             <section class="card">
                 <h2>Upload a File</h2>
-                <form action="/upload" method="post" enctype="multipart/form-data" data-refresh-form>
+                <form action="/upload" method="post" enctype="multipart/form-data" data-refresh-form data-reset-on-success="true">
                     <input type="file" name="file" required>
                     <button type="submit">Upload</button>
                 </form>
@@ -36,7 +38,7 @@
 
             <section class="card">
                 <h2>Write a Quick Note</h2>
-                <form action="/notes" method="post" data-refresh-form>
+                <form action="/notes" method="post" data-refresh-form data-reset-on-success="true">
                     <input type="text" name="note_title" placeholder="Title" required>
                     <textarea name="note_content" rows="6" placeholder="Type your note..." required></textarea>
                     <button type="submit">Save Note</button>
@@ -46,79 +48,104 @@
 
         <section class="card">
             <h2>Your Uploaded Files</h2>
-            <ul class="file-list">
-                {% for file in files %}
-                <li>
-                    <div class="file-row">
-                        <div>
-                            <a href="/download/{{ file.id }}" target="_blank">{{ file.filename }}</a>
-                            <small>Uploaded {{ file.uploaded_at }}</small>
-                        </div>
-                        <form action="/files/{{ file.id }}/delete" method="post" class="inline-form" data-refresh-form>
-                            <button type="submit" class="secondary">Delete</button>
-                        </form>
-                    </div>
-                </li>
-                {% else %}
-                <li>No files uploaded yet.</li>
-                {% endfor %}
-            </ul>
+            <div data-refresh-target="files">
+                {% include 'partials/files_list.html' %}
+            </div>
         </section>
 
         <section class="card">
             <h2>Saved Notes</h2>
-            <ul class="note-list">
-                {% for note in notes %}
-                <li class="note-card">
-                    <div class="note-header">
-                        <strong>{{ note.title }}</strong>
-                        <small>Updated {{ note.updated_at }}</small>
-                    </div>
-                    <p>{{ note.content }}</p>
-                    <form action="/notes/{{ note.id }}/delete" method="post" class="inline-form" data-refresh-form>
-                        <button type="submit" class="secondary">Delete</button>
-                    </form>
-                </li>
-                {% else %}
-                <li>No notes saved yet.</li>
-                {% endfor %}
-            </ul>
+            <div data-refresh-target="notes">
+                {% include 'partials/notes_list.html' %}
+            </div>
         </section>
     </div>
 
     <script>
         (function () {
-            const forms = document.querySelectorAll('[data-refresh-form]');
-            forms.forEach(form => {
-                form.addEventListener('submit', event => {
-                    event.preventDefault();
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    const originalText = submitButton ? submitButton.textContent : '';
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.textContent = 'Working...';
-                    }
-                    const formData = new FormData(form);
-                    fetch(form.action, {
-                        method: (form.method || 'POST').toUpperCase(),
-                        body: formData,
-                        credentials: 'same-origin'
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Request failed');
-                            }
+            const statusBox = document.querySelector('[data-inline-status]');
+            const targets = {
+                files: document.querySelector('[data-refresh-target="files"]'),
+                notes: document.querySelector('[data-refresh-target="notes"]')
+            };
+
+            const showStatus = (message, isError = false) => {
+                if (!statusBox) {
+                    return;
+                }
+                statusBox.textContent = message || '';
+                statusBox.classList.toggle('is-error', isError);
+                statusBox.classList.toggle('is-success', !isError);
+                statusBox.style.opacity = message ? '1' : '0';
+            };
+
+            const updateTargets = (data) => {
+                if (data.files_html && targets.files) {
+                    targets.files.innerHTML = data.files_html;
+                }
+                if (data.notes_html && targets.notes) {
+                    targets.notes.innerHTML = data.notes_html;
+                }
+                wireForms();
+            };
+
+            const handleSubmit = (event) => {
+                event.preventDefault();
+                const form = event.currentTarget;
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalText = submitButton ? submitButton.textContent : '';
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Working...';
+                }
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: (form.method || 'POST').toUpperCase(),
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'fetch' }
+                })
+                    .then(response => {
+                        const contentType = response.headers.get('content-type') || '';
+                        if (!contentType.includes('application/json')) {
                             window.location.reload();
-                        })
-                        .catch(() => {
-                            if (submitButton) {
-                                submitButton.disabled = false;
-                                submitButton.textContent = originalText || 'Submit';
-                            }
-                            alert('Something went wrong. Please refresh and try again.');
-                        });
+                            return null;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data) {
+                            return;
+                        }
+                        updateTargets(data);
+                        const isError = data.status !== 'ok';
+                        showStatus(data.message || (isError ? 'Something went wrong.' : 'Updated successfully'), isError);
+                        if (!isError && form.dataset.resetOnSuccess === 'true') {
+                            form.reset();
+                        }
+                    })
+                    .catch(() => {
+                        showStatus('Unable to complete that action. Refresh and try again.', true);
+                    })
+                    .finally(() => {
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.textContent = originalText || 'Submit';
+                        }
+                    });
+            };
+
+            const wireForms = () => {
+                document.querySelectorAll('[data-refresh-form]').forEach(form => {
+                    if (form.dataset.enhanced === 'true') {
+                        return;
+                    }
+                    form.dataset.enhanced = 'true';
+                    form.addEventListener('submit', handleSubmit);
                 });
-            });
+            };
+
+            wireForms();
         })();
     </script>
 </body>

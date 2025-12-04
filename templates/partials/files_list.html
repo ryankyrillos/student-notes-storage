@@ -1,0 +1,19 @@
+<ul class="file-list">
+    {% if files %}
+        {% for file in files %}
+            <li>
+                <div class="file-row">
+                    <div>
+                        <a href="/download/{{ file.id }}" target="_blank">{{ file.filename }}</a>
+                        <small>Uploaded {{ file.uploaded_at }}</small>
+                    </div>
+                    <form action="/files/{{ file.id }}/delete" method="post" class="inline-form" data-refresh-form>
+                        <button type="submit" class="secondary">Delete</button>
+                    </form>
+                </div>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li>No files uploaded yet.</li>
+    {% endif %}
+</ul>

@@ -6,7 +6,7 @@ Features:
 - Dashboard showing uploaded notes (metadata from RDS)
 """
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, stream_with_context
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, stream_with_context, jsonify
 import boto3
 import pymysql
 import os
@@ -102,6 +102,36 @@ def stream_s3_file(bucket, key, download_name):
         response.headers['Content-Length'] = str(content_length)
     return response
 
+
+def is_fetch_request():
+    requested_with = request.headers.get('X-Requested-With', '').lower()
+    return requested_with in {'xmlhttprequest', 'fetch'}
+
+
+def render_dashboard_partials(files, notes):
+    files_html = render_template('partials/files_list.html', files=files)
+    notes_html = render_template('partials/notes_list.html', notes=notes)
+    return files_html, notes_html
+
+
+def dashboard_action_response(message=None, success=True, status_code=None):
+    if status_code is None:
+        status_code = 200 if success else 400
+    if is_fetch_request():
+        files = get_user_files(session['user_id'])
+        notes = get_text_notes(session['user_id'])
+        files_html, notes_html = render_dashboard_partials(files, notes)
+        payload = {
+            'status': 'ok' if success else 'error',
+            'message': message,
+            'files_html': files_html,
+            'notes_html': notes_html
+        }
+        return jsonify(payload), status_code
+    if message:
+        flash(message)
+    return redirect(url_for('dashboard'))
+
 # ---------- Routes ----------
 @app.route('/')
 def index():
@@ -151,16 +181,16 @@ def dashboard():
 def upload():
     if 'user_id' not in session:
         return redirect(url_for('index'))
-    uploaded_file = request.files['file']
-    if uploaded_file.filename == '':
-        flash('No file selected')
-        return redirect(url_for('dashboard'))
-    # Generate a unique S3 key
+    uploaded_file = request.files.get('file')
+    if not uploaded_file or uploaded_file.filename == '':
+        return dashboard_action_response('Please choose a file to upload', success=False)
     s3_key = f"{session['user_id']}/{uploaded_file.filename}"
-    s3.upload_fileobj(uploaded_file, BUCKET_NAME, s3_key)
+    try:
+        s3.upload_fileobj(uploaded_file, BUCKET_NAME, s3_key)
+    except Exception:
+        return dashboard_action_response('Unable to upload file right now', success=False, status_code=502)
     save_file_record(session['user_id'], uploaded_file.filename, s3_key)
-    flash('File uploaded successfully')
-    return redirect(url_for('dashboard'))
+    return dashboard_action_response('File uploaded successfully')
 
 @app.route('/download/<int:file_id>')
 def download(file_id):
@@ -189,16 +219,13 @@ def delete_file(file_id):
         cur.execute("SELECT * FROM notes WHERE id=%s AND user_id=%s", (file_id, session['user_id']))
         file_record = cur.fetchone()
     if not file_record:
-        flash('File not found')
-        return redirect(url_for('dashboard'))
+        return dashboard_action_response('File not found', success=False, status_code=404)
     try:
         s3.delete_object(Bucket=BUCKET_NAME, Key=file_record['s3_key'])
     except Exception:
-        flash('Unable to remove file from storage; try again later')
-        return redirect(url_for('dashboard'))
+        return dashboard_action_response('Unable to remove file from storage; try again later', success=False, status_code=502)
     delete_file_record(file_id, session['user_id'])
-    flash('File deleted successfully')
-    return redirect(url_for('dashboard'))
+    return dashboard_action_response('File deleted successfully')
 
 @app.route('/notes', methods=['POST'])
 def create_note():
@@ -207,11 +234,9 @@ def create_note():
     title = request.form.get('note_title', '').strip() or 'Untitled note'
     content = request.form.get('note_content', '').strip()
     if not content:
-        flash('Note content cannot be empty')
-        return redirect(url_for('dashboard'))
+        return dashboard_action_response('Note content cannot be empty', success=False)
     save_text_note(session['user_id'], title, content)
-    flash('Note saved successfully')
-    return redirect(url_for('dashboard'))
+    return dashboard_action_response('Note saved successfully')
 
 @app.route('/notes/<int:note_id>/delete', methods=['POST'])
 def remove_note(note_id):
@@ -224,11 +249,9 @@ def remove_note(note_id):
         )
         note = cur.fetchone()
     if not note:
-        flash('Note not found')
-        return redirect(url_for('dashboard'))
+        return dashboard_action_response('Note not found', success=False, status_code=404)
     delete_text_note(note_id, session['user_id'])
-    flash('Note deleted')
-    return redirect(url_for('dashboard'))
+    return dashboard_action_response('Note deleted')
 
 if __name__ == '__main__':
     # In production use gunicorn; this block is for local testing

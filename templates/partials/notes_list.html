@@ -1,0 +1,18 @@
+<ul class="note-list">
+    {% if notes %}
+        {% for note in notes %}
+            <li class="note-card">
+                <div class="note-header">
+                    <strong>{{ note.title }}</strong>
+                    <small>Updated {{ note.updated_at }}</small>
+                </div>
+                <p>{{ note.content }}</p>
+                <form action="/notes/{{ note.id }}/delete" method="post" class="inline-form" data-refresh-form>
+                    <button type="submit" class="secondary">Delete</button>
+                </form>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li>No notes saved yet.</li>
+    {% endif %}
+</ul>

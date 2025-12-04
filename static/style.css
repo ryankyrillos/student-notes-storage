@@ -101,6 +101,22 @@ button[disabled] {
     color: #e74c3c;
 }
 
+.inline-status {
+    min-height: 1.2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.inline-status.is-success {
+    color: #1e8449;
+}
+
+.inline-status.is-error {
+    color: #c0392b;
+}
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
