@@ -6,7 +6,7 @@ Features:
 - Dashboard showing uploaded notes (metadata from RDS)
 """
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, stream_with_context, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, stream_with_context, jsonify, g
 import boto3
 import pymysql
 import os
@@ -20,35 +20,53 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'super-secret-key')
 # AWS clients (credentials via IAM role on EC2)
 s3 = boto3.client('s3')
 
-# RDS connection (use env vars for host, user, password, db)
-conn = pymysql.connect(
-    host=os.getenv('RDS_HOST'),
-    user=os.getenv('RDS_USER'),
-    password=os.getenv('RDS_PASSWORD'),
-    database=os.getenv('RDS_DB'),
-    cursorclass=pymysql.cursors.DictCursor
-)
+# RDS connection settings (connections created per-request)
+DB_CONFIG = {
+    'host': os.getenv('RDS_HOST'),
+    'user': os.getenv('RDS_USER'),
+    'password': os.getenv('RDS_PASSWORD'),
+    'database': os.getenv('RDS_DB'),
+    'cursorclass': pymysql.cursors.DictCursor,
+    'autocommit': False
+}
+
+
+def get_db_connection():
+    if 'db_conn' not in g:
+        g.db_conn = pymysql.connect(**DB_CONFIG)
+    return g.db_conn
+
+
+@app.teardown_appcontext
+def close_db_connection(_):
+    db_conn = g.pop('db_conn', None)
+    if db_conn:
+        db_conn.close()
 
 BUCKET_NAME = os.getenv('S3_BUCKET')
 
 # ---------- Helper Functions ----------
 def get_user_by_email(email):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         return cur.fetchone()
 
 def create_user(email, password):
     pwd_hash = generate_password_hash(password)
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s)", (email, pwd_hash))
     conn.commit()
 
 def get_user_files(user_id):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("SELECT * FROM notes WHERE user_id=%s ORDER BY uploaded_at DESC", (user_id,))
         return cur.fetchall()
 
 def save_file_record(user_id, filename, s3_key):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
             "INSERT INTO notes (user_id, filename, s3_key) VALUES (%s, %s, %s)",
@@ -57,11 +75,13 @@ def save_file_record(user_id, filename, s3_key):
     conn.commit()
 
 def delete_file_record(file_id, user_id):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("DELETE FROM notes WHERE id=%s AND user_id=%s", (file_id, user_id))
     conn.commit()
 
 def get_text_notes(user_id):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
             "SELECT * FROM text_notes WHERE user_id=%s ORDER BY updated_at DESC",
@@ -70,6 +90,7 @@ def get_text_notes(user_id):
         return cur.fetchall()
 
 def save_text_note(user_id, title, content):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
             "INSERT INTO text_notes (user_id, title, content) VALUES (%s, %s, %s)",
@@ -78,6 +99,7 @@ def save_text_note(user_id, title, content):
     conn.commit()
 
 def delete_text_note(note_id, user_id):
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("DELETE FROM text_notes WHERE id=%s AND user_id=%s", (note_id, user_id))
     conn.commit()
@@ -197,6 +219,7 @@ def download(file_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
     # Get file record and verify ownership
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("SELECT * FROM notes WHERE id=%s AND user_id=%s", (file_id, session['user_id']))
         file_record = cur.fetchone()
@@ -215,6 +238,7 @@ def download(file_id):
 def delete_file(file_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute("SELECT * FROM notes WHERE id=%s AND user_id=%s", (file_id, session['user_id']))
         file_record = cur.fetchone()
@@ -242,6 +266,7 @@ def create_note():
 def remove_note(note_id):
     if 'user_id' not in session:
         return redirect(url_for('index'))
+    conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
             "SELECT id FROM text_notes WHERE id=%s AND user_id=%s",
