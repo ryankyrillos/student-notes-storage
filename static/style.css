@@ -9,9 +9,6 @@ body {
     background: radial-gradient(circle at top, #fdf5ff 0%, #f0f6ff 35%, #e6f0ff 70%, #e9f8f2 100%);
     margin: 0;
     padding: clamp(0.5rem, 3vw, 1.5rem);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
     min-height: 100vh;
     color: #1c2434;
 }
@@ -21,9 +18,10 @@ body {
     backdrop-filter: blur(14px);
     border-radius: 18px;
     padding: clamp(1.5rem, 4vw, 3rem);
-    margin: clamp(1rem, 3vw, 2.5rem) auto 2rem;
+    margin: clamp(0.5rem, 2vw, 1.5rem) auto;
     box-shadow: 0 25px 60px rgba(61, 87, 180, 0.15);
-    width: min(640px, 100%);
+    width: 100%;
+    max-width: 720px;
 }
 
 h1 {
@@ -137,7 +135,7 @@ button[disabled] {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 1.2rem;
     margin-bottom: 1.5rem;
 }
@@ -198,6 +196,12 @@ a:hover {
     text-decoration: underline;
 }
 
+@media (min-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     body {
         padding: 0.5rem;
@@ -213,10 +217,6 @@ a:hover {
     button,
     .inline-form button {
         width: 100%;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
     }
 
     .file-row,
