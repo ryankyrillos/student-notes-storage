@@ -1,36 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+
 * {
     box-sizing: border-box;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #f0f4ff, #e0eaff);
+    font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #fdf5ff 0%, #f0f6ff 35%, #e6f0ff 70%, #e9f8f2 100%);
     margin: 0;
-    padding: 1rem;
+    padding: clamp(0.5rem, 3vw, 1.5rem);
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
+    color: #1c2434;
 }
 
 .container {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: clamp(1.5rem, 3vw, 2.5rem);
-    margin: clamp(1.5rem, 4vw, 3rem) auto 2rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-    width: min(960px, 100%);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    margin: clamp(1rem, 3vw, 2.5rem) auto 2rem;
+    box-shadow: 0 25px 60px rgba(61, 87, 180, 0.15);
+    width: min(640px, 100%);
 }
 
 h1 {
-    color: #2c3e50;
+    color: #1b2a49;
     margin: 0;
+    font-size: clamp(1.7rem, 5vw, 2.3rem);
 }
 
 .tagline {
     margin: 0.3rem 0 0;
-    color: #56657a;
+    color: #5f6f91;
+    font-size: 0.95rem;
 }
 
 .header {
@@ -38,6 +43,7 @@ h1 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+    gap: 1rem;
 }
 
 .logout-link {
@@ -56,11 +62,16 @@ label {
     color: #34495e;
 }
 
-input[type="email"], input[type="password"], input[type="file"], input[type="text"], textarea {
-    padding: 0.6rem;
-    border: 1px solid #bdc3c7;
-    border-radius: 6px;
+input[type="email"],
+input[type="password"],
+input[type="file"],
+input[type="text"],
+textarea {
+    padding: 0.75rem;
+    border: 1px solid #d6ddea;
+    border-radius: 10px;
     font-size: 1rem;
+    background: #f9fbff;
 }
 
 textarea {
@@ -69,27 +80,31 @@ textarea {
 }
 
 button {
-    background: #3498db;
+    background: linear-gradient(120deg, #3c83ff, #8e76ff);
     color: white;
     border: none;
-    border-radius: 6px;
-    padding: 0.8rem;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    box-shadow: 0 10px 20px rgba(60, 131, 255, 0.25);
 }
 
 button:hover {
-    background: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(60, 131, 255, 0.3);
 }
 
 .secondary {
-    background: #ecf0f1;
-    color: #2c3e50;
+    background: rgba(224, 232, 255, 0.8);
+    color: #1b2a49;
+    box-shadow: none;
 }
 
 .secondary:hover {
-    background: #d0d7de;
+    background: rgba(209, 219, 255, 0.95);
 }
 
 button[disabled] {
@@ -122,16 +137,16 @@ button[disabled] {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.2rem;
     margin-bottom: 1.5rem;
 }
 
 .card {
-    background: #fff;
-    border-radius: 10px;
+    background: linear-gradient(145deg, #ffffff, #f2f6ff);
+    border-radius: 16px;
     padding: 1.5rem;
-    box-shadow: 0 10px 25px rgba(15,32,56,0.08);
+    box-shadow: 0 10px 30px rgba(24, 57, 102, 0.08);
 }
 
 .file-list,
@@ -171,6 +186,7 @@ button[disabled] {
 .inline-form {
     margin: 0;
     display: inline-flex;
+    width: 100%;
 }
 
 a {
@@ -191,6 +207,7 @@ a:hover {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
+        text-align: left;
     }
 
     button,
@@ -214,17 +231,21 @@ a:hover {
     }
 
     .container {
-        margin-top: 1rem;
+        margin-top: 0.5rem;
         padding: 1.25rem;
     }
 }
 
 @media (max-width: 480px) {
     h1 {
-        font-size: 1.7rem;
+        font-size: 1.5rem;
     }
 
     .card {
         padding: 1.2rem;
+    }
+
+    .dashboard-grid {
+        gap: 0.9rem;
     }
 }
