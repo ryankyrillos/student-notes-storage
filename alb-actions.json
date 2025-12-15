@@ -1,0 +1,6 @@
+[
+    {
+        "Type": "forward",
+        "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-north-1:150215480207:targetgroup/StudentNotes-TG/cb0ffc59a4c8a7ce"
+    }
+]

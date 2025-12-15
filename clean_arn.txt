@@ -1,0 +1,1 @@
+arn:aws:elasticloadbalancing:eu-north-1:150215480207:listener/app/StudentNotes-ALB/da3d8dfc97489948/6be99a5e10d57dd7

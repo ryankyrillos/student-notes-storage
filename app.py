@@ -17,6 +17,14 @@ from botocore.exceptions import ClientError
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'super-secret-key')
 
+# Session Security
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # AWS clients (credentials via IAM role on EC2)
 s3 = boto3.client('s3')
 

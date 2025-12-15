@@ -1,0 +1,118 @@
+{
+    "CallerReference": "student-notes-cf-Reference-1",
+    "Aliases": {
+        "Quantity": 0
+    },
+    "DefaultRootObject": "",
+    "Origins": {
+        "Quantity": 1,
+        "Items": [
+            {
+                "Id": "ALB-Origin",
+                "DomainName": "StudentNotes-ALB-1917955878.eu-north-1.elb.amazonaws.com",
+                "OriginPath": "",
+                "CustomHeaders": {
+                    "Quantity": 1,
+                    "Items": [
+                        {
+                            "HeaderName": "X-Origin-Verify",
+                            "HeaderValue": "StudentNotes-Secret-87654321"
+                        }
+                    ]
+                },
+                "CustomOriginConfig": {
+                    "HTTPPort": 80,
+                    "HTTPSPort": 443,
+                    "OriginProtocolPolicy": "http-only",
+                    "OriginSslProtocols": {
+                        "Quantity": 1,
+                        "Items": [
+                            "TLSv1.2"
+                        ]
+                    },
+                    "OriginReadTimeout": 30,
+                    "OriginKeepaliveTimeout": 5
+                },
+                "ConnectionAttempts": 3,
+                "ConnectionTimeout": 10
+            }
+        ]
+    },
+    "OriginGroups": {
+        "Quantity": 0
+    },
+    "DefaultCacheBehavior": {
+        "TargetOriginId": "ALB-Origin",
+        "TrustedSigners": {
+            "Enabled": false,
+            "Quantity": 0
+        },
+        "TrustedKeyGroups": {
+            "Enabled": false,
+            "Quantity": 0
+        },
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+            "Quantity": 7,
+            "Items": [
+                "GET",
+                "HEAD",
+                "POST",
+                "PUT",
+                "PATCH",
+                "OPTIONS",
+                "DELETE"
+            ],
+            "CachedMethods": {
+                "Quantity": 2,
+                "Items": [
+                    "GET",
+                    "HEAD"
+                ]
+            }
+        },
+        "SmoothStreaming": false,
+        "Compress": true,
+        "LambdaFunctionAssociations": {
+            "Quantity": 0
+        },
+        "FunctionAssociations": {
+            "Quantity": 0
+        },
+        "FieldLevelEncryptionId": "",
+        "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+        "OriginRequestPolicyId": "216adef6-5c7f-47e4-b989-5492eafa07d3"
+    },
+    "CacheBehaviors": {
+        "Quantity": 0
+    },
+    "CustomErrorResponses": {
+        "Quantity": 0
+    },
+    "Comment": "Student Notes CloudFront",
+    "Logging": {
+        "Enabled": false,
+        "IncludeCookies": false,
+        "Bucket": "",
+        "Prefix": ""
+    },
+    "PriceClass": "PriceClass_All",
+    "Enabled": true,
+    "ViewerCertificate": {
+        "CloudFrontDefaultCertificate": true,
+        "SSLSupportMethod": "vip",
+        "MinimumProtocolVersion": "TLSv1",
+        "CertificateSource": "cloudfront"
+    },
+    "Restrictions": {
+        "GeoRestriction": {
+            "RestrictionType": "none",
+            "Quantity": 0
+        }
+    },
+    "WebACLId": "",
+    "HttpVersion": "http2",
+    "IsIPV6Enabled": true,
+    "ContinuousDeploymentPolicyId": "",
+    "Staging": false
+}
